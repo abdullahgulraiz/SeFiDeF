@@ -37,4 +37,4 @@ class RunCase:
                   f"\n====")
             results = self.technique.apply(self.corpus, **technique_kwargs)
             evaluation = self.technique.evaluate(self.labels, results)
-            pprint(evaluation)
+            pprint(evaluation, compact=True)

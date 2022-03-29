@@ -8,6 +8,8 @@ pytest = "*"
 sematch = "*"
 sentence-transformers = "*"
 gensim = "*"
+requests = "*"
+beautifulsoup4 = "*"
 
 [dev-packages]
 
