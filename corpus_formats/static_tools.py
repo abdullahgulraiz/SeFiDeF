@@ -37,8 +37,19 @@ def scrape_data_from_url(url):
     return result
 
 
-anchore_trivy_name_title_description = CorpusFormat(
-    name="Anchore/Trivy, description",
+def anchore_get_cve_id_from_nvd_data(nvd_data):
+    for obj in nvd_data:
+        if "id" in obj:
+            return obj["id"]
+    return ""
+
+
+def anchore_get_package_name_from_package_path(package_path: str):
+    return package_path.split("/")[-2]
+
+
+anchore_trivy_description = CorpusFormat(
+    name="Anchore/Trivy, url_scraped/description",
     format_dict={
         'keys': [{'tool': 'anchore',
                   'fields': ('url',),
@@ -48,5 +59,24 @@ anchore_trivy_name_title_description = CorpusFormat(
                   'fields': ('Description', ),
                   'ensure_fields': True}],
         'separator': " - "
+    }
+)
+
+
+anchore_trivy_package_name_cve_id_description = CorpusFormat(
+    name="Anchore/Trivy, package_name cve_id description",
+    format_dict={
+        'keys': [{'tool': 'anchore',
+                  'fields': ('package_path', 'nvd_data', 'url'),  # ('nvd_data', 'package_path'),
+                  'processing_functions': {
+                      'nvd_data': anchore_get_cve_id_from_nvd_data,
+                      'package_path': anchore_get_package_name_from_package_path,
+                      'url': scrape_data_from_url
+                  },
+                  'ensure_fields': True},
+                 {'tool': 'trivy',
+                  'fields': ('PkgName', 'VulnerabilityID', 'Description'),
+                  'ensure_fields': True}],
+        'separator': " "
     }
 )

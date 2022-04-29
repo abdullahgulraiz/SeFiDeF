@@ -7,10 +7,18 @@ from dataloaders.base import BaseDataLoader
 
 
 class SefilaDataLoaderV1(BaseDataLoader):
-    def __init__(self, path: str, remove_stopwords: bool = True) -> None:
+    def __init__(
+            self,
+            path: str,
+            remove_stopwords: bool = True,
+            remove_linebreaks: bool = True,
+            remove_special_characters: bool = True
+    ) -> None:
         with open(path, 'r') as f:
             self.data = json.load(f)
         self.remove_stopwords = remove_stopwords
+        self.remove_linebreaks = remove_linebreaks
+        self.remove_special_characters = remove_special_characters
 
     def _get_collections(self):
         return self.data
@@ -72,9 +80,11 @@ class SefilaDataLoaderV1(BaseDataLoader):
                     finding_id = int(finding['id'])
                     collection_identifier = (int(collection['id']), collection['name'])
                     # remove line breaks, tabs, and spaces and trim whitespaces
-                    corpus_entry = re.sub("[ \\t\\n\\r]+", " ", corpus_entry).strip()
+                    if self.remove_linebreaks:
+                        corpus_entry = re.sub("[ \\t\\n\\r]+", " ", corpus_entry).strip()
                     # remove special characters
-                    corpus_entry = re.sub("/[\\s()-]+/gi", "", corpus_entry)
+                    if self.remove_special_characters:
+                        corpus_entry = re.sub("/[\\s()-]+/gi", "", corpus_entry)
                     if self.remove_stopwords:
                         corpus_entry = utils.remove_stopwords(corpus_entry)
                     corpus[finding_id] = corpus_entry
@@ -83,8 +93,14 @@ class SefilaDataLoaderV1(BaseDataLoader):
 
 
 class SefilaDataLoaderV2(SefilaDataLoaderV1):
-    def __init__(self, path: str, remove_stopwords: bool = True) -> None:
-        super().__init__(path, remove_stopwords)
+    def __init__(
+            self,
+            path: str,
+            remove_stopwords: bool = True,
+            remove_linebreaks: bool = True,
+            remove_special_characters: bool = True
+    ) -> None:
+        super().__init__(path, remove_stopwords, remove_linebreaks, remove_special_characters)
         # create finding id -> tool name mapping for efficient retrieval later
         self.finding_id_tool_name_mapping = {}
         for metadata in self.data["metadata"]:

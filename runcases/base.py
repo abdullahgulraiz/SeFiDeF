@@ -21,7 +21,7 @@ class RunCase:
         self.technique = technique
         self.technique_kwargs = technique_kwargs
 
-    def execute(self):
+    def execute(self, **execution_kwargs):
         # add empty kwargs if absent
         if not self.technique_kwargs:
             self.technique_kwargs = [{}]
@@ -36,5 +36,5 @@ class RunCase:
                   f"Params: `{technique_kwargs}` "
                   f"\n====")
             results = self.technique.apply(self.corpus, **technique_kwargs)
-            evaluation = self.technique.evaluate(self.labels, results)
+            evaluation = self.technique.evaluate(self.labels, results, **execution_kwargs)
             pprint(evaluation, compact=True)
