@@ -22,8 +22,11 @@ def scrape_github_advisory_data(url):
     response = requests.get(url)
     parsed_html = BeautifulSoup(response.content, "html.parser")
     description_elements = parsed_html.find_all("div", class_="markdown-body comment-body p-0")
-    # get first paragraph element
-    return description_elements[0].find("p").text
+    scraped_text = ""
+    for description_element in description_elements:
+        p_texts = [p_element.text for p_element in description_element.find_all("p")]
+        scraped_text += " ".join(p_texts)
+    return scraped_text
 
 
 def scrape_data_from_url(url):
@@ -76,6 +79,22 @@ anchore_trivy_package_name_cve_id_description = CorpusFormat(
                   'ensure_fields': True},
                  {'tool': 'trivy',
                   'fields': ('PkgName', 'VulnerabilityID', 'Description'),
+                  'ensure_fields': True}],
+        'separator': " "
+    }
+)
+
+anchore_trivy_cve_id = CorpusFormat(
+    name="Anchore/Trivy, cve_id",
+    format_dict={
+        'keys': [{'tool': 'anchore',
+                  'fields': ('nvd_data', ),
+                  'processing_functions': {
+                      'nvd_data': anchore_get_cve_id_from_nvd_data
+                  },
+                  'ensure_fields': True},
+                 {'tool': 'trivy',
+                  'fields': ('VulnerabilityID',),
                   'ensure_fields': True}],
         'separator': " "
     }

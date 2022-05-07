@@ -11,6 +11,7 @@ gensim = "*"
 requests = "*"
 beautifulsoup4 = "*"
 spacy = "*"
+pyright = "*"
 
 [dev-packages]
 

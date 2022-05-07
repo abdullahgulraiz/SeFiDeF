@@ -16,7 +16,12 @@ class SbertSemanticSearch(BaseTechnique):
     def __init__(self, embedder: str) -> None:
         self.embedder = SentenceTransformer(embedder)
 
-    def apply(self, corpus: Dict[int, str], threshold: float = 0.2) -> Dict[int, Sequence[int]]:
+    def apply(
+            self,
+            corpus: Dict[int, str],
+            threshold: float = 0.2,
+            transitive_clustering: bool = True
+    ) -> Dict[int, Sequence[int]]:
         # ensure we have a threshold variable
         corpus_strings = list(corpus.values())
         corpus_embeddings = self.embedder.encode(corpus_strings, convert_to_tensor=True)
@@ -59,4 +64,17 @@ class SbertSemanticSearch(BaseTechnique):
             # sort the list for easier processing in future
             results[search_string_id].sort()
 
+        # normalize clusters based on transitive property if required
+        if transitive_clustering:
+            for finding_id_1, finding_cluster in results.items():
+                # convert finding cluster to set
+                finding_cluster_final = set(finding_cluster)
+                for finding_id_2 in finding_cluster:
+                    # skip if same finding
+                    if finding_id_1 == finding_id_2:
+                        continue
+                    # add all related findings to the formed cluster
+                    finding_cluster_final.update(results[finding_id_2])
+                # add to original results
+                results[finding_id_1] = list(finding_cluster_final)
         return dict(results)

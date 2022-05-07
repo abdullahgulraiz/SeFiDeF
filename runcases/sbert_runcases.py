@@ -29,7 +29,10 @@ def sbert_trivy_anchore_runcases_1(ds_path: str) -> Sequence[RunCase]:
             dataloader=dataloader,
             corpus_format=corpus_format,
             technique=techniques.SbertSemanticSearch(embedder=embedder),
-            technique_kwargs=[{"threshold": 0.7}, {"threshold": 0.8}]
+            technique_kwargs=[
+                {"threshold": 0.5},
+                # {"threshold": 0.7}
+            ]
         )
 
 

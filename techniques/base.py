@@ -81,7 +81,7 @@ class BaseTechnique(ABC):
         return_val = {
             'accuracy': accuracy,
             'dice_score': dice_score,
-            'cluster_stats_1': cluster_stats_1,
+            # 'cluster_stats_1': cluster_stats_1,
             'cluster_stats_2': cluster_stats_2
         }
         

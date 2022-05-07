@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 class BaseDataLoader(ABC):
     @abstractmethod
-    def __init__(self, path: str):
+    def __init__(self, **kwargs):
         pass
 
     @abstractmethod
