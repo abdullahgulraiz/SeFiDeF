@@ -84,9 +84,12 @@ def equality_comparison_static_tools(unique_ds_path: str, target_ds_path: str) -
                 # {"threshold": 0.5, "transitive_clustering": True},
                 # {"threshold": 0.5, "transitive_clustering": False},
                 {"threshold": 0.7, "transitive_clustering": True},
-                {"threshold": 0.7, "transitive_clustering": False},
+                # {"threshold": 0.7, "transitive_clustering": False},
                 # {"threshold": 0.8, "transitive_clustering": True},
                 # {"threshold": 0.9, "transitive_clustering": True},
                 # {"threshold": 0.7}
-            ]
+            ],
+            # save_runcase_file_path="/home/abdullah/LRZ Sync+Share/TUM BMC/Master Thesis/Data/runcases_results/"
+            #                        "equality_comparison_static_tools.json",
+            print_report=True
         )
