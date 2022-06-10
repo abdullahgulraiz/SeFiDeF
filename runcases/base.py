@@ -36,8 +36,7 @@ class RunCase:
             corpus_format: CorpusFormat,
             technique: BaseTechnique,
             technique_kwargs: Union[dict, Sequence[dict]] = None,
-            save_runcase_file_path: str = None,
-            print_report: bool = None
+            save_runcase_file_path: str = None
     ):
         self.title = title
         self.dataloader = dataloader
@@ -46,9 +45,8 @@ class RunCase:
         self.technique = technique
         self.technique_kwargs = technique_kwargs
         self.save_runcase_file_path = save_runcase_file_path
-        self.print_report = print_report
 
-    def execute(self, **execution_kwargs):
+    def execute(self, print_report: bool = True, **execution_kwargs):
         # add empty kwargs if absent
         if not self.technique_kwargs:
             self.technique_kwargs = [{}]
@@ -71,7 +69,7 @@ class RunCase:
             print(runcase_title)
             results = self.technique.apply(self.corpus, **technique_kwargs)
             # set verbose flag if print report feature is required
-            if self.print_report:
+            if print_report:
                 execution_kwargs['verbose'] = True
             evaluation = self.technique.evaluate(self.labels, results, **execution_kwargs)
             pprint(evaluation, compact=True)
@@ -86,6 +84,6 @@ class RunCase:
                 json.dump(runcases_data, f)
             print(f"RunCase results saved to: {self.save_runcase_file_path}")
         # print detailed runcase report if required
-        if self.print_report:
+        if print_report:
             print("----\nRunCase Report\n----")
             print_runcase_report(runcases_data)

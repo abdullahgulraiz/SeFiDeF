@@ -12,13 +12,15 @@ class SefilaDataLoaderV1(BaseDataLoader):
             path: str,
             remove_stopwords: bool = True,
             remove_linebreaks: bool = True,
-            remove_special_characters: bool = True
+            remove_special_characters: bool = True,
+            to_lowercase: bool = True
     ) -> None:
         with open(path, 'r') as f:
             self.data = json.load(f)
         self.remove_stopwords = remove_stopwords
         self.remove_linebreaks = remove_linebreaks
         self.remove_special_characters = remove_special_characters
+        self.to_lowercase = to_lowercase
 
     def _get_collections(self):
         return self.data
@@ -87,6 +89,8 @@ class SefilaDataLoaderV1(BaseDataLoader):
                         corpus_entry = re.sub("/[\\s()-]+/gi", "", corpus_entry)
                     if self.remove_stopwords:
                         corpus_entry = utils.remove_stopwords(corpus_entry)
+                    if self.to_lowercase:
+                        corpus_entry = corpus_entry.lower()
                     corpus[finding_id] = corpus_entry
                     labels[collection_identifier].append(finding_id)
         return dict(corpus), dict(labels)
@@ -98,9 +102,10 @@ class SefilaDataLoaderV2(SefilaDataLoaderV1):
             path: str,
             remove_stopwords: bool = True,
             remove_linebreaks: bool = True,
-            remove_special_characters: bool = True
+            remove_special_characters: bool = True,
+            to_lowercase: bool = True
     ) -> None:
-        super().__init__(path, remove_stopwords, remove_linebreaks, remove_special_characters)
+        super().__init__(path, remove_stopwords, remove_linebreaks, remove_special_characters, to_lowercase)
         # create finding id -> tool name mapping for efficient retrieval later
         self.finding_id_tool_name_mapping = {}
         for metadata in self.data["metadata"]:

@@ -57,3 +57,25 @@ def sbert_trivy_anchore_runcases_2(ds_path: str) -> Sequence[RunCase]:
                 # {"threshold": 0.7}
             ]
         )
+
+
+def sbert_multiple_static_tools_descriptions(ds_path: str) -> Sequence[RunCase]:
+    dataloader = dataloaders.SefilaDataLoaderV2(
+        path=ds_path,
+        remove_stopwords=False,
+        remove_linebreaks=True,
+        remove_special_characters=False
+    )
+    corpus_format = corpus_formats.static_tools.multiple_static_tools_ds_descriptions
+    # initialize technique for different embedders
+    for embedder in techniques.SbertSemanticSearch.EMBEDDERS[0:1]:
+        yield RunCase(
+            title=f"SbertSemanticSearch {embedder}",
+            dataloader=dataloader,
+            corpus_format=corpus_format,
+            technique=techniques.SbertSemanticSearch(embedder=embedder),
+            technique_kwargs=[
+                {"threshold": 0.8, "transitive_clustering": True},
+                # {"threshold": 0.7}
+            ]
+        )

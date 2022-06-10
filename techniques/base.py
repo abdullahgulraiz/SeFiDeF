@@ -78,15 +78,11 @@ class BaseTechnique(ABC):
         d2 = len(pairs_d - (pairs_q.intersection(pairs_p)))
         cluster_stats_2 = get_cluster_stats(a2, b2, c2, d2)
 
-        return_val = {
-            'accuracy': accuracy,
-            'dice_score': dice_score,
-            # 'cluster_stats_1': cluster_stats_1,
-            'cluster_stats_2': cluster_stats_2
-        }
-        
-        if verbose:
-            return_val["unmatched_labels"] = unmatched_labels
-            return_val["unmatched_predictions"] = unmatched_predictions
+        return_val = {'accuracy': accuracy,
+                      # 'dice_score': dice_score,
+                      # 'cluster_stats_2': cluster_stats_2,
+                      "unmatched_labels": unmatched_labels,
+                      "unmatched_predictions": unmatched_predictions,
+                      "matched_predictions": matched_predictions}
 
         return return_val

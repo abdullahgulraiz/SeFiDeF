@@ -59,12 +59,11 @@ anchore_trivy_description = CorpusFormat(
                   'processing_functions': {'url': scrape_data_from_url},
                   'ensure_fields': False},
                  {'tool': 'trivy',
-                  'fields': ('Description', ),
+                  'fields': ('Description',),
                   'ensure_fields': True}],
         'separator': " - "
     }
 )
-
 
 anchore_trivy_package_name_cve_id_description = CorpusFormat(
     name="Anchore/Trivy, package_name cve_id description",
@@ -88,7 +87,7 @@ anchore_trivy_cve_id = CorpusFormat(
     name="Anchore/Trivy, cve_id",
     format_dict={
         'keys': [{'tool': 'anchore',
-                  'fields': ('nvd_data', ),
+                  'fields': ('nvd_data',),
                   'processing_functions': {
                       'nvd_data': anchore_get_cve_id_from_nvd_data
                   },
@@ -96,6 +95,79 @@ anchore_trivy_cve_id = CorpusFormat(
                  {'tool': 'trivy',
                   'fields': ('VulnerabilityID',),
                   'ensure_fields': True}],
+        'separator': " "
+    }
+)
+
+multiple_static_tools_ds_descriptions = CorpusFormat(
+    name="Multiple Static Tools, descriptions",
+    format_dict={
+        'keys': [
+            {
+                'tool': 'anchore',
+                # 'fields': ('url',),  # un-comment if scraped data not available for anchore findings
+                # 'processing_functions': {'url': scrape_data_from_url},
+                'fields': ('scraped_description',),
+                'ensure_fields': True
+            },
+            {
+                'tool': 'trivy',
+                'fields': ('Description',),
+                'ensure_fields': True
+            },
+            {
+                'tool': 'codeql',
+                'fields': ('message',),
+                'processing_functions': {'message': lambda msg: msg["text"]},
+                'ensure_fields': True
+            },
+            {
+                'tool': 'dependency_checker',
+                'fields': ('description',),
+                'ensure_fields': False  # TODO: find solution for tool exception categories
+            },
+            {
+                'tool': 'gitleaks',
+                'fields': ('Description', "Message"),
+                'ensure_fields': True
+            },
+            {
+                'tool': 'horusec',
+                'fields': ('vulnerabilities',),
+                'processing_functions': {'vulnerabilities': lambda vuln: vuln["details"]},
+                'ensure_fields': True
+            },
+            {
+                'tool': 'semgrep',
+                'fields': ('message',),
+                'ensure_fields': True
+            },
+        ],
+        'separator': " "
+    }
+)
+
+multiple_static_tools_ds_cve_ids = CorpusFormat(
+    name="Multiple Static Tools, cve_ids",
+    format_dict={
+        'keys': [
+            {
+                'tool': 'anchore',
+                'fields': ('nvd_data',),
+                'processing_functions': {'nvd_data': lambda nvd_data: nvd_data[0]["id"] if len(nvd_data) > 0 else ""},
+                'ensure_fields': True
+            },
+            {
+                'tool': 'trivy',
+                'fields': ('VulnerabilityID',),
+                'ensure_fields': True
+            },
+            {
+                'tool': 'dependency_checker',
+                'fields': ('name',),
+                'ensure_fields': False  # TODO: find solution for tool exception categories
+            },
+        ],
         'separator': " "
     }
 )
