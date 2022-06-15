@@ -1,9 +1,10 @@
 import json
 from pprint import pprint
+from datetime import datetime
+from typing import Union, Sequence
 from dataloaders.base import BaseDataLoader
 from techniques.base import BaseTechnique
 from corpus_formats.base import CorpusFormat
-from typing import Union, Sequence
 
 
 def print_runcase_report(runcases_data):
@@ -60,7 +61,7 @@ class RunCase:
             "runcases": []
         }
         # apply technique on corpus and evaluate results
-        for technique_kwargs in self.technique_kwargs:
+        for runcase_idx, technique_kwargs in enumerate(self.technique_kwargs):
             runcase_title = (f"==== \n"
                              f"RunCase: `{self.title}`, "
                              f"Corpus: {self.corpus_format.name}, "
@@ -78,11 +79,14 @@ class RunCase:
                 "results": results,
                 "evaluation": evaluation
             })
-        # save runcase file for evaluation in SeFiLa if path provided
-        if self.save_runcase_file_path:
-            with open(self.save_runcase_file_path, 'w') as f:
-                json.dump(runcases_data, f)
-            print(f"RunCase results saved to: {self.save_runcase_file_path}")
+            # save runcase file for evaluation in SeFiLa if path provided
+            # TODO: modify SeFiLa to save runcases
+            if self.save_runcase_file_path:
+                current_timestamp = str(datetime.now()).replace(":", ".")
+                filename = f"{self.save_runcase_file_path}_{runcase_idx}_{current_timestamp}.json"
+                with open(filename, 'w') as f:
+                    json.dump(runcases_data, f)
+                print(f"RunCase {runcase_idx} results saved to: {filename}")
         # print detailed runcase report if required
         if print_report:
             print("----\nRunCase Report\n----")
