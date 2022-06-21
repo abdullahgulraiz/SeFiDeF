@@ -105,7 +105,7 @@ multiple_static_tools_ds_descriptions = CorpusFormat(
         'keys': [
             {
                 'tool': 'anchore',
-                # 'fields': ('url',),  # un-comment if scraped data not available for anchore findings
+                # 'fields': ('url',),  # un-comment if scraped data not available for anchore findings (from SeFiLa)
                 # 'processing_functions': {'url': scrape_data_from_url},
                 'fields': ('scraped_description',),
                 'ensure_fields': True

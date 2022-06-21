@@ -20,14 +20,9 @@ if __name__ == '__main__':
     multiple_static_tools_ds = base_path / "static-tools-ds-all.json"
     dynamic_tools_ds = base_path / "dynamic_dataset_formatted.json"
     # result paths
-    dynamic_tools_results = base_path / "dynamic_tools_deduplication"
+    dynamic_tools_results = results_path / "dynamic_tools_deduplication"
+    static_tools_results = results_path / "static_tools_deduplication"
     run_cases = [
-        # *runcases.gensim_lsi_zap_arachni_runcases(ds_path=sefila_dynamic_ds_path),
-        # *sbert_zap_arachni_runcases(ds_path=sefila_ds_path)
-        # *runcases.gensim_lsi_trivy_anchore_runcases_1(ds_path=pkl_static_ds_path),
-        # *runcases.gensim_lsi_trivy_anchore_runcases_2(ds_path=pkl_static_ds_path_2),
-        # *runcases.sbert_trivy_anchore_runcases_1(ds_path=pkl_static_ds_path),
-        # *runcases.sbert_trivy_anchore_runcases_2(ds_path=pkl_static_ds_path_2),
         # *runcases.equality_comparison_static_tools(
         #     unique_ds_path=str(sefila_static_ds_path),
         #     target_ds_path=str(anchore_trivy_descriptions_pkl)
@@ -37,10 +32,14 @@ if __name__ == '__main__':
         #     unique_ds_path=str(multiple_static_tools_ds),
         #     target_ds_path=str(multiple_static_tools_ds)
         # ),
-        *runcases.dynamic_tools_deduplication(
-            ds_path=str(dynamic_tools_ds),
-            save_runcase_file_path=str(dynamic_tools_results)
+        # *runcases.dynamic_tools_deduplication(
+        #     ds_path=str(dynamic_tools_ds),
+        #     save_runcase_file_path=str(dynamic_tools_results)
+        # ),
+        *runcases.static_tools_deduplication(
+            ds_path=str(multiple_static_tools_ds),
+            save_runcase_file_path=str(static_tools_results)
         )
     ]
     for run_case in run_cases:
-        run_case.execute(print_report=False)
+        run_case.execute(print_report=False, print_evaluation_fields=('accuracy', ))

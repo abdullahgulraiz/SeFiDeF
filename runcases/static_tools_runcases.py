@@ -47,7 +47,7 @@ def corpus_aggregation_static_tools_descriptions(unique_ds_path: str, target_ds_
     cve_ids_dataloader = _get_dataloader(unique_ds_path)
     descriptions_dataloader = _get_dataloader(target_ds_path)
     unique_corpus_format = corpus_formats.multiple_static_tools_ds_cve_ids
-    dataloader = AggregatedDataloader(
+    dataloader = dataloaders.AggregatedDataloader(
         unique_keys_dataloader=cve_ids_dataloader,
         unique_keys_corpus_format=unique_corpus_format,
         target_corpus_dataloader=descriptions_dataloader
@@ -74,3 +74,71 @@ def corpus_aggregation_static_tools_descriptions(unique_ds_path: str, target_ds_
             save_runcase_file_path="C:\\UserData\\z0041tek\\OneDrive - Siemens AG\\Master Thesis\\Data\\"
                                    "runcases_results\\corpus_aggregation_static_tools_descriptions.json",
         )
+
+
+def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None) -> Sequence[RunCase]:
+    # corpus formats
+    cve_ids_corpus_format = corpus_formats.multiple_static_tools_ds_cve_ids
+    descriptions_corpus_format = corpus_formats.multiple_static_tools_ds_descriptions
+    # dataloaders
+    cve_ids_dataloader = descriptions_dataloader = dataloaders.SefilaDataLoaderV2(
+        path=ds_path, remove_stopwords=False, remove_linebreaks=True, remove_special_characters=False
+    )
+    aggregated_descriptions_dataloader = dataloaders.AggregatedDataloader(
+        unique_keys_dataloader=cve_ids_dataloader,
+        unique_keys_corpus_format=cve_ids_corpus_format,
+        target_corpus_dataloader=descriptions_dataloader
+    )
+    _dataloaders = {
+        'Descriptions': descriptions_dataloader,
+        'Aggregated Descriptions': aggregated_descriptions_dataloader
+    }
+    # corpus (for corpus-based methods' initialization)
+    descriptions_corpus, _ = descriptions_dataloader.get_corpus(**descriptions_corpus_format.format_dict)
+    aggregated_descriptions_corpus, _ = aggregated_descriptions_dataloader.get_corpus(
+        **descriptions_corpus_format.format_dict
+    )
+    _corpus = {
+        'Descriptions': descriptions_corpus,
+        'Aggregated Descriptions': aggregated_descriptions_corpus
+    }
+    # techniques
+    sbert_semantic_search = techniques.SbertSemanticSearch(embedder=techniques.SbertSemanticSearch.EMBEDDERS[0])
+    _techniques_kwargs = {
+        "SbertSemanticSearch": [
+            # {"threshold": 0.7},
+            # {"threshold": 0.8},
+            # {"threshold": 0.9},
+            {"threshold": 0.95},  # max accuracy
+        ],
+        "GensimLsiSimilarity": [
+            # {"threshold": 0.8},
+            {"threshold": 0.85},  # maximum accuracy
+            # {"threshold": 0.9},
+            # {"threshold": 0.95},
+        ]
+    }
+
+    def _get_technique(_technique_name: str, _dataloader_name: str = None) -> techniques.BaseTechnique:
+        if _technique_name == "SbertSemanticSearch":
+            return sbert_semantic_search
+        elif _technique_name == "GensimLsiSimilarity":
+            return techniques.GensimLsiSimilarity(corpus=_corpus[_dataloader_name], num_topics=350)
+
+    for dataloader_name in [
+        # "Descriptions",
+        "Aggregated Descriptions"
+    ]:
+        for technique_name in [
+            # "SbertSemanticSearch",
+            "GensimLsiSimilarity"
+        ]:
+            dataloader = _dataloaders[dataloader_name]
+            yield RunCase(
+                title=f"{dataloader_name}, {technique_name}",
+                dataloader=dataloader,
+                corpus_format=descriptions_corpus_format,
+                technique=_get_technique(technique_name, dataloader_name),
+                technique_kwargs=_techniques_kwargs[technique_name],
+                save_runcase_file_path=save_runcase_file_path
+            )

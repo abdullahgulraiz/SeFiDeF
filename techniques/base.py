@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Sequence, Set
+from typing import Dict, Any, Sequence
 
 
 class BaseTechnique(ABC):
@@ -27,80 +27,29 @@ class BaseTechnique(ABC):
         return results
 
     @staticmethod
-    def evaluate(labels: Dict[Any, Sequence[int]], predictions: Dict[int, Sequence[int]], verbose=False) -> dict:
-        # get unique predictions
-        unique_predictions = set(tuple(sorted(x)) for x in predictions.values())
-        # calculate accuracy
-        unique_labels = set(tuple(sorted(lbl)) for lbl in labels.values())
-        matched_predictions = []
-        matched_labels = []
-        for prediction in unique_predictions:
-            for label in unique_labels:
-                if prediction == label:
-                    matched_predictions.append(prediction)
-                    matched_labels.append(label)
-                    break
-
-        unmatched_predictions = [pred for pred in unique_predictions if pred not in matched_predictions]
-        unmatched_labels = [lbl for lbl in unique_labels if lbl not in matched_labels]
-
-        # calculate accuracy
-        accuracy = (
-                (len(matched_predictions) / len(unique_predictions)) +
-                (len(matched_labels) / len(unique_labels))
-        ) / 2
-
-        # calculate dice score
-        dice_score = len(unique_labels.intersection(unique_predictions)) / len(unique_labels.union(unique_predictions))
-
-        # calculate metrics from paper: https://www.dbs.ifi.lmu.de/~zimek/publications/ICDE2012/ICDE12_ELKI_0_5.pdf
-        # P: unique_labels, Q: unique_predictions
-        def get_cluster_stats(_a, _b, _c, _d):
-            return {
-                "precision": _a / (_a + _c),
-                "recall": _a / (_a + _b),
-                "f-measure": (2 * _a) / ((2 * _a) + _b + _c),
-                "rand": (_a + _d) / (_a + _b + _c + _d),
-                "jaccard": _a / (_a + _b + _c)
-            }
-
-        a1 = len(unique_labels.intersection(unique_predictions))
-        c1 = len(unique_labels - unique_predictions)
-        b1 = len(unique_predictions - unique_labels)
-        d1 = 0
-        cluster_stats_1 = get_cluster_stats(a1, b1, c1, d1)
-
-        # calculate metrics from paper http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.214.7233&rep=rep1
-        # &type=pdf
-        # P: unique_labels, Q: unique_predictions <-- mentioned on page 367
-        def get_pairs(collection: Set) -> Set:
-            results = set()
-            for pair in collection:
-                if len(pair) == 1:
-                    results.add(pair)
-                    continue
-                for idx1, num1 in enumerate(pair):
-                    for idx2, num2 in enumerate(pair):
-                        if idx1 == idx2:
-                            continue
-                        results.add(tuple(sorted([num1, num2])))
-            return results
-
-        all_possible_clusters = unique_labels.union(unique_predictions)  # D
-        pairs_p = get_pairs(unique_labels)
-        pairs_q = get_pairs(unique_predictions)
-        pairs_d = get_pairs(all_possible_clusters)
-        a2 = len(pairs_p.intersection(pairs_q))
-        b2 = len(pairs_q - pairs_p)
-        c2 = len(pairs_p - pairs_q)
-        d2 = len(pairs_d - (pairs_q.intersection(pairs_p)))
-        cluster_stats_2 = get_cluster_stats(a2, b2, c2, d2)
-
-        return_val = {'accuracy': accuracy,
-                      # 'dice_score': dice_score,
-                      # 'cluster_stats_2': cluster_stats_2,
-                      "unmatched_labels": unmatched_labels,
-                      "unmatched_predictions": unmatched_predictions,
-                      "matched_predictions": matched_predictions}
-
-        return return_val
+    def evaluate(
+            labels: Dict[Any, Sequence[int]],
+            predictions: Dict[int, Sequence[int]],
+            round_digits: int = 3
+    ) -> dict:
+        # establish unique predictions and labels
+        unique_predictions = set(tuple(sorted(pred)) for pred in predictions.values() if len(pred) > 0)
+        unique_labels = set(tuple(sorted(lbl)) for lbl in labels.values() if len(lbl) > 0)
+        # compute matched and unmatched predictions
+        matched_predictions = matched_labels = unique_predictions.intersection(unique_labels)
+        unmatched_predictions = unique_predictions.symmetric_difference(matched_predictions)
+        unmatched_labels = unique_labels.symmetric_difference(matched_labels)
+        # calculate accuracies
+        prediction_accuracy = len(matched_predictions) / len(unique_predictions)
+        label_accuracy = len(matched_labels) / len(unique_labels)
+        total_accuracy = (prediction_accuracy + label_accuracy) / 2
+        return {
+            'accuracy': {
+                'predictions': round(prediction_accuracy, round_digits),
+                'labels': round(label_accuracy, round_digits),
+                'average': round(total_accuracy, round_digits)
+            },
+            "unmatched_labels": list(unmatched_labels),
+            "unmatched_predictions": list(unmatched_predictions),
+            "matched_predictions": list(matched_predictions)
+        }

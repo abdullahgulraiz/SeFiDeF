@@ -47,7 +47,7 @@ class RunCase:
         self.technique_kwargs = technique_kwargs
         self.save_runcase_file_path = save_runcase_file_path
 
-    def execute(self, print_report: bool = True, **execution_kwargs):
+    def execute(self, print_report: bool = True, print_evaluation_fields: Union[Sequence, bool] = True, **execution_kwargs):
         # add empty kwargs if absent
         if not self.technique_kwargs:
             self.technique_kwargs = [{}]
@@ -69,11 +69,14 @@ class RunCase:
                              f"\n====")
             print(runcase_title)
             results = self.technique.apply(self.corpus, **technique_kwargs)
-            # set verbose flag if print report feature is required
-            if print_report:
-                execution_kwargs['verbose'] = True
-            evaluation = self.technique.evaluate(self.labels, results, **execution_kwargs)
-            pprint(evaluation, compact=True)
+            evaluation = self.technique.evaluate(self.labels, results)
+            # print evaluation results
+            if print_evaluation_fields:
+                if isinstance(print_evaluation_fields, Sequence):
+                    pprint({field: evaluation[field] for field in print_evaluation_fields}, compact=True)
+                else:
+                    pprint(evaluation, compact=True)
+            # store runcases data
             runcases_data["runcases"].append({
                 "title": runcase_title,
                 "results": results,
