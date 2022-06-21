@@ -12,6 +12,21 @@ class BaseTechnique(ABC):
         pass
 
     @staticmethod
+    def _transitive_clustering(results):
+        for finding_id_1, finding_cluster in results.items():
+            # convert finding cluster to set
+            finding_cluster_final = set(finding_cluster)
+            for finding_id_2 in finding_cluster:
+                # skip if same finding
+                if finding_id_1 == finding_id_2:
+                    continue
+                # add all related findings to the formed cluster
+                finding_cluster_final.update(results[finding_id_2])
+            # add to original results
+            results[finding_id_1] = list(finding_cluster_final)
+        return results
+
+    @staticmethod
     def evaluate(labels: Dict[Any, Sequence[int]], predictions: Dict[int, Sequence[int]], verbose=False) -> dict:
         # get unique predictions
         unique_predictions = set(tuple(sorted(x)) for x in predictions.values())
@@ -30,7 +45,10 @@ class BaseTechnique(ABC):
         unmatched_labels = [lbl for lbl in unique_labels if lbl not in matched_labels]
 
         # calculate accuracy
-        accuracy = len(matched_predictions) / len(unique_predictions)
+        accuracy = (
+                (len(matched_predictions) / len(unique_predictions)) +
+                (len(matched_labels) / len(unique_labels))
+        ) / 2
 
         # calculate dice score
         dice_score = len(unique_labels.intersection(unique_predictions)) / len(unique_labels.union(unique_predictions))

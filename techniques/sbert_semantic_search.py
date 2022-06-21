@@ -66,15 +66,5 @@ class SbertSemanticSearch(BaseTechnique):
 
         # normalize clusters based on transitive property if required
         if transitive_clustering:
-            for finding_id_1, finding_cluster in results.items():
-                # convert finding cluster to set
-                finding_cluster_final = set(finding_cluster)
-                for finding_id_2 in finding_cluster:
-                    # skip if same finding
-                    if finding_id_1 == finding_id_2:
-                        continue
-                    # add all related findings to the formed cluster
-                    finding_cluster_final.update(results[finding_id_2])
-                # add to original results
-                results[finding_id_1] = list(finding_cluster_final)
+            results = self._transitive_clustering(results)
         return dict(results)

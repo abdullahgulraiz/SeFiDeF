@@ -35,7 +35,12 @@ class GensimLsiSimilarity(BaseTechnique):
         # transform corpus to LSI space and index it
         self.corpus_index = similarities.MatrixSimilarity(self.gensim_model[corpus])
 
-    def apply(self, corpus: Dict[int, str], threshold: float = 0.5) -> Dict[int, Sequence[int]]:
+    def apply(
+            self,
+            corpus: Dict[int, str],
+            threshold: float = 0.5,
+            transitive_clustering: bool = True
+    ) -> Dict[int, Sequence[int]]:
         # create string -> Id mapping
         string_id_mapping = defaultdict(list)
         for _id, corpus_string in corpus.items():
@@ -59,4 +64,7 @@ class GensimLsiSimilarity(BaseTechnique):
                 if doc_id not in results[query_id]:
                     results[query_id].append(doc_id)
             results[query_id].sort()
+        # normalize clusters based on transitive property if required
+        if transitive_clustering:
+            results = self._transitive_clustering(results)
         return dict(results)
