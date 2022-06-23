@@ -35,6 +35,11 @@ class BaseTechnique(ABC):
         # establish unique predictions and labels
         unique_predictions = set(tuple(sorted(pred)) for pred in predictions.values() if len(pred) > 0)
         unique_labels = set(tuple(sorted(lbl)) for lbl in labels.values() if len(lbl) > 0)
+        # ensure finding Ids are equal in both predictions and labels
+        unique_predictions_finding_ids = {finding_id for cluster in unique_predictions for finding_id in cluster}
+        unique_labels_finding_ids = {finding_id for cluster in unique_labels for finding_id in cluster}
+        assert unique_predictions_finding_ids == unique_labels_finding_ids, ("Finding IDs should be equal in both "
+                                                                             "corpus and labels.")
         # compute matched and unmatched predictions
         matched_predictions = matched_labels = unique_predictions.intersection(unique_labels)
         unmatched_predictions = unique_predictions.symmetric_difference(matched_predictions)

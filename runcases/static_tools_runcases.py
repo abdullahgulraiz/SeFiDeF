@@ -130,8 +130,8 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
         "Aggregated Descriptions"
     ]:
         for technique_name in [
-            # "SbertSemanticSearch",
-            "GensimLsiSimilarity"
+            "SbertSemanticSearch",
+            # "GensimLsiSimilarity"
         ]:
             dataloader = _dataloaders[dataloader_name]
             yield RunCase(

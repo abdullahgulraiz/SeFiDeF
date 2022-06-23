@@ -43,6 +43,10 @@ class RunCase:
         self.dataloader = dataloader
         self.corpus_format = corpus_format
         self.corpus, self.labels = self.dataloader.get_corpus(**corpus_format.format_dict)
+        # ensure that equal findingIds are present in both corpus and labels
+        corpus_finding_ids = set(findingId for findingId in self.corpus.keys())
+        label_finding_ids = set(findingId for lbl in self.labels.values() for findingId in lbl)
+        assert corpus_finding_ids == label_finding_ids, "Finding IDs should be equal in both corpus and labels."
         self.technique = technique
         self.technique_kwargs = technique_kwargs
         self.save_runcase_file_path = save_runcase_file_path

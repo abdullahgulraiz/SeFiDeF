@@ -24,13 +24,10 @@ class AggregatedDataloader(dataloaders.BaseDataLoader):
         ]
     ]:
         # get corpus and labels for intended format
-        target_corpus, target_labels = self.target_corpus_dataloader.get_corpus(
-            keys=keys, separator=separator
-        )
+        target_corpus, target_labels = self.target_corpus_dataloader.get_corpus(keys=keys, separator=separator)
         # get corpus and labels for unique key
-        unique_key_corpus, unique_key_labels = self.unique_keys_dataloader.get_corpus(
-            **self.unique_keys_corpus_format.format_dict
-        )
+        unique_key_corpus, unique_key_labels = self.unique_keys_dataloader.get_corpus(**self.unique_keys_corpus_format
+                                                                                      .format_dict)
         # aggregate entries from original corpus based on unique key
         unique_key_aggregated_corpus = defaultdict(list)
         empty_str_finding_ids = []
@@ -46,10 +43,9 @@ class AggregatedDataloader(dataloaders.BaseDataLoader):
             key: separator.join(val)
             for key, val in unique_key_aggregated_corpus.items()
         }
-        # form final corpus
-        corpus = {key: unique_key_aggregated_corpus[val] for key, val in unique_key_corpus.items() if val != ''}
-        for finding_id in empty_str_finding_ids:
-            # replace if not already existing
-            if finding_id not in corpus:
-                corpus[finding_id] = target_corpus[finding_id]
-        return dict(corpus), dict(target_labels)
+        # form corpus of values that were aggregated
+        aggregated_corpus = {key: unique_key_aggregated_corpus[val] for key, val in unique_key_corpus.items() if val != ''}
+        # modify target corpus to replace original entries with their corresponding aggregated entries
+        for finding_id, agg_corpus_str in aggregated_corpus.items():
+            target_corpus[finding_id] = agg_corpus_str
+        return dict(target_corpus), dict(target_labels)
