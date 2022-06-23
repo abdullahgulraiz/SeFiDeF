@@ -12,6 +12,7 @@ requests = "*"
 beautifulsoup4 = "*"
 spacy = "*"
 pyright = "*"
+multiprocess = "*"
 
 [dev-packages]
 

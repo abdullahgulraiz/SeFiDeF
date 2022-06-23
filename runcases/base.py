@@ -71,11 +71,11 @@ class RunCase:
                              f"Corpus: {self.corpus_format.name}, "
                              f"Params: `{technique_kwargs}` "
                              f"\n====")
-            print(runcase_title)
             results = self.technique.apply(self.corpus, **technique_kwargs)
             evaluation = self.technique.evaluate(self.labels, results)
             # print evaluation results
             if print_evaluation_fields:
+                print(runcase_title)
                 if isinstance(print_evaluation_fields, Sequence):
                     pprint({field: evaluation[field] for field in print_evaluation_fields}, compact=True)
                 else:

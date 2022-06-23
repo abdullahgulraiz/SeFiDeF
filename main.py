@@ -1,7 +1,13 @@
 import os
 from pathlib import Path
+import multiprocess as mp
 
 import runcases
+
+
+# function to call execute method on a run case
+def execute_runcase(run_case: runcases.RunCase):
+    run_case.execute(print_report=False, print_evaluation_fields=('accuracy',))
 
 
 if __name__ == '__main__':
@@ -38,8 +44,13 @@ if __name__ == '__main__':
         # ),
         *runcases.static_tools_deduplication(
             ds_path=str(multiple_static_tools_ds),
-            save_runcase_file_path=str(static_tools_results)
+            save_runcase_file_path=None  # str(static_tools_results)
         )
     ]
-    for run_case in run_cases:
-        run_case.execute(print_report=False, print_evaluation_fields=('accuracy', ))
+    # create a pool of process workers
+    pool = mp.Pool(mp.cpu_count())
+    # call function for each run case separately
+    pool.map(execute_runcase, run_cases)
+    pool.close()
+    # wait for all workers to complete
+    pool.join()
