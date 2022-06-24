@@ -47,7 +47,12 @@ class GensimLsiSimilarity(BaseTechnique):
             string_id_mapping[corpus_string].append(_id)
         # sort result into corpus id -> sequence of related findings that pass our threshold
         results = defaultdict(list)
+        empty_query_ids = []
         for query_id, query in corpus.items():
+            # manually handle empty queries, since no bag of words can be generated for them
+            if len(query) == 0:
+                empty_query_ids.append(query_id)
+                continue
             vec_bow = self.dictionary.doc2bow(query.lower().split())
             if self.tf_idf:
                 vec_bow = self.tf_idf[vec_bow]
@@ -64,6 +69,12 @@ class GensimLsiSimilarity(BaseTechnique):
                 if doc_id not in results[query_id]:
                     results[query_id].append(doc_id)
             results[query_id].sort()
+
+        # add results for empty queries in final results
+        empty_query_ids = sorted(empty_query_ids)
+        for query_id in empty_query_ids:
+            results[query_id] = empty_query_ids
+
         # normalize clusters based on transitive property if required
         if transitive_clustering:
             results = self._transitive_clustering(results)

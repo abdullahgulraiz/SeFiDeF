@@ -44,7 +44,7 @@ if __name__ == '__main__':
         # ),
         *runcases.static_tools_deduplication(
             ds_path=str(multiple_static_tools_ds),
-            save_runcase_file_path=None  # str(static_tools_results)
+            save_runcase_file_path=str(static_tools_results)
         )
     ]
     # create a pool of process workers

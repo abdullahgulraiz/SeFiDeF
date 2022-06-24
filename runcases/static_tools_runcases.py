@@ -113,9 +113,9 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
         ],
         "GensimLsiSimilarity": [
             # {"threshold": 0.8},
-            {"threshold": 0.85},  # maximum accuracy
-            {"threshold": 0.9},
-            {"threshold": 0.95},
+            # {"threshold": 0.85},
+            {"threshold": 0.9},  # maximum accuracy
+            # {"threshold": 0.95},
         ]
     }
 
@@ -126,11 +126,11 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
             return techniques.GensimLsiSimilarity(corpus=_corpus[_dataloader_name], num_topics=350)
 
     for dataloader_name in [
-        "Descriptions",
+        # "Descriptions",
         "Aggregated Descriptions"
     ]:
         for technique_name in [
-            # "SbertSemanticSearch",
+            "SbertSemanticSearch",
             "GensimLsiSimilarity"
         ]:
             dataloader = _dataloaders[dataloader_name]
