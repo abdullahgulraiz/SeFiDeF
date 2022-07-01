@@ -1,12 +1,14 @@
 import re
 import json
-from collections import defaultdict
-from typing import Dict, Sequence, Tuple
+from typing import Dict, Sequence, Tuple, Any
 from pathlib import Path
+import multiprocess as mp
+import numpy as np
+import numpy.typing as npt
 from sematch.semantic.similarity import WordNetSimilarity
 
-from techniques import BaseTechnique
 import utils
+from techniques import BaseTechnique
 
 
 class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
@@ -110,30 +112,92 @@ class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
         total_similarity /= word_similarity_count
         return total_similarity
 
-    def apply(self, corpus: Dict[int, str], threshold: float = 0.25) -> Dict[int, Sequence[int]]:
-        results = defaultdict(list)
-        for finding_id_main, finding_text_main in corpus.items():
-            # finding is similar to itself
-            results[finding_id_main].append(finding_id_main)
-            # get all other similar findings
-            for finding_id_sec, finding_text_sec in corpus.items():
-                saved_similarity_available, similarity_score = self._get_saved_similarity(
-                    string_1=finding_text_main,
-                    string_2=finding_text_sec,
-                    saved_collection=self.saved_sentence_similarities
-                )
-                if not saved_similarity_available:
-                    similarity_score = self._compute_sentence_similarity_score(finding_text_main, finding_text_sec)
-                    self._save_string_similarity(
-                        string_1=finding_text_main,
-                        string_2=finding_text_sec,
-                        similarity=similarity_score,
-                        saved_collection=self.saved_sentence_similarities
-                    )
-                if similarity_score >= threshold:
-                    if finding_id_sec not in results[finding_id_main]:
-                        results[finding_id_main].append(finding_id_sec)
-            results[finding_id_main].sort()
+    # def _multiprocess_similarity_calculation(self, idx: int, sentence_1: str, sentence_2: str) -> Tuple[int, float]:
+    #     score = self._compute_sentence_similarity_score(sentence_1, sentence_2)
+    #     return idx, score
+
+    def _compute_text_matrix_similarity(self, matrix) -> npt.NDArray:
+        blank_sentences_indices = matrix[0] == ""
+        assert np.all(blank_sentences_indices == (matrix[1] == "")), ("Sentences for comparison should either both be "
+                                                                      "blank or available.")
+        results_matrix = np.full(matrix.shape[1:], -1, dtype=float)
+        # create arrays of indices, first sentences, and second sentences
+        non_empty_str_indices = np.argwhere(matrix[0] != "").flatten().tolist()
+        sentence_1_list = matrix[0][non_empty_str_indices].tolist()
+        sentence_2_list = matrix[1][non_empty_str_indices].tolist()
+        # declare function
+        
+        def _multiprocess_similarity_calculation(idx: int, sentence_1: str, sentence_2: str) -> Tuple[int, float]:
+            print("Running function for ", idx, "S1: ", sentence_1, "S2: ", sentence_2)
+            score = self._compute_sentence_similarity_score(sentence_1, sentence_2)
+            return idx, score
+        # call function for each run case separately
+        results = None
+        with mp.Pool(mp.cpu_count()) as pool:
+            results = pool.map(
+                _multiprocess_similarity_calculation, zip(non_empty_str_indices, sentence_1_list, sentence_2_list)
+            )
+        print(results)
+        # for index in non_empty_str_indices:
+        #     results_matrix[index] = s
+        return results_matrix
+
+    def apply(
+            self, corpus: Dict[int, str], threshold: float = 0.25, transitive_clustering: bool = True
+    ) -> Dict[int, Sequence[int]]:
+        # convert finding Ids to array
+        finding_ids = np.array(list(corpus.keys()))
+        finding_texts = np.array(list(corpus.values()))
+        num_entries = len(corpus)
+        # create a matrix from list of finding Ids
+        finding_ids_matrix = np.tile(finding_ids, (num_entries, 1))
+        finding_texts_matrix = np.tile(finding_texts, (num_entries, 1))
+        # create combinations of finding texts to be compared together
+        finding_texts_combinations = np.array([finding_texts_matrix, np.transpose(finding_texts_matrix)])
+        # positions where one of the strings is empty has 0.0 similarity
+        positions_with_one_entry_empty = (
+                ((finding_texts_combinations[0] == "") & (finding_texts_combinations[1] != ""))
+                | ((finding_texts_combinations[1] == "") & (finding_texts_combinations[0] != ""))
+        )
+        # positions where strings are equal have a 1.0 similarity
+        positions_with_similar_strings = finding_texts_combinations[0] == finding_texts_combinations[1]
+        # similarities are mirrored across the diagonal, so we need to compute just one set of similarities
+        indices_of_lower_triangle = np.tril_indices(num_entries)
+        positions_of_lower_triangle = np.zeros(finding_texts_combinations.shape[1:], dtype=bool)
+        positions_of_lower_triangle[indices_of_lower_triangle] = True
+        positions_of_lower_triangle = np.array([positions_of_lower_triangle, positions_of_lower_triangle])
+        # compute positions for which similarity needs to be computed
+        positions_to_compute_similarity = ~(positions_with_one_entry_empty
+                                            | positions_with_similar_strings
+                                            | positions_of_lower_triangle)
+        # get matrix of strings to compute for
+        texts_to_compute = np.where(positions_to_compute_similarity, finding_texts_combinations, "")
+        # re-shape the matrix into a vector-like form for our function to process
+        texts_to_compute = texts_to_compute.reshape(texts_to_compute.shape[0], -1)
+        similarities = self._compute_text_matrix_similarity(texts_to_compute)
+        # re-shape back to our form. should be a lower triangular matrix containing similarities.
+        similarities = similarities.reshape((num_entries, num_entries))
+        # ensure spatial integrity of returned data
+        assert np.all(
+            (positions_to_compute_similarity[0] | positions_to_compute_similarity[1]) == (similarities >= 0)), (
+            "Similarity scores values should correspond to positions where similarities should be computed."
+        )
+        # reflect similarity values along the diagonal
+        similarities = np.triu(similarities)
+        similarities = similarities + similarities.T - np.diag(np.diag(similarities))
+        # add known similarities
+        similarities[positions_with_one_entry_empty] = 0.0
+        similarities[positions_with_similar_strings] = 1.0
+        # threshold values and reduce with finding Ids
+        reduced_similarities = np.where(similarities >= threshold, finding_ids_matrix, -1)
+        results = {}
+        # create final results
+        for idx, finding_id in enumerate(finding_ids):
+            results_temp = reduced_similarities[idx]
+            results[finding_id] = np.delete(results_temp, results_temp == -1).tolist()
         # update skip words file
         self._update_skip_words_file()
+        # normalize clusters based on transitive property if required
+        if transitive_clustering:
+            results = self._transitive_clustering(results)
         return dict(results)
