@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from itertools import combinations
 from typing import Dict, Any, Sequence
 
 
@@ -48,12 +49,32 @@ class BaseTechnique(ABC):
         prediction_accuracy = len(matched_predictions) / len(unique_predictions)
         label_accuracy = len(matched_labels) / len(unique_labels)
         total_accuracy = (prediction_accuracy + label_accuracy) / 2
+        # calculate clustering statistics
+        """
+        Ref: https://stackoverflow.com/questions/12725263/computing-f-measure-for-clustering
+        For our case:
+            D: unique_predictions_finding_ids
+            P: unique_predictions
+            Q: unique_labels  
+        """
+        pairs_d = set(combinations(unique_predictions_finding_ids, 2))
+        pairs_p = set(pair for cluster in unique_predictions for pair in combinations(cluster, 2))
+        pairs_q = set(pair for cluster in unique_labels for pair in combinations(cluster, 2))
+        a = len(pairs_p.intersection(pairs_q))
+        b = len(pairs_p - pairs_q)
+        c = len(pairs_q - pairs_p)
+        precision = a / (a + c)
+        recall = a / (a + b)
+        f_measure = (2 * a) / ((2 * a) + b + c)
         return {
             'accuracy': {
                 'predictions': round(prediction_accuracy, round_digits),
                 'labels': round(label_accuracy, round_digits),
                 'average': round(total_accuracy, round_digits)
             },
+            "f-measure": f_measure,
+            "precision": precision,
+            "recall": recall,
             "unmatched_labels": list(unmatched_labels),
             "unmatched_predictions": list(unmatched_predictions),
             "matched_predictions": list(matched_predictions)

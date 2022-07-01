@@ -7,7 +7,7 @@ import runcases
 
 # function to call execute method on a run case
 def execute_runcase(run_case: runcases.RunCase):
-    run_case.execute(print_report=False, print_evaluation_fields=('accuracy',))
+    run_case.execute(print_report=False, print_evaluation_fields=('accuracy', 'f-measure', 'precision', 'recall'))
 
 
 if __name__ == '__main__':

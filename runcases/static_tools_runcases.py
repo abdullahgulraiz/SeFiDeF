@@ -107,8 +107,9 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
     _techniques_kwargs = {
         "SbertSemanticSearch": [
             # {"threshold": 0.7},
-            # {"threshold": 0.8},
-            # {"threshold": 0.9},
+            {"threshold": 0.8},
+            {"threshold": 0.85},
+            {"threshold": 0.9},
             {"threshold": 0.95},  # max accuracy
         ],
         "GensimLsiSimilarity": [
@@ -130,7 +131,7 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
         "Aggregated Descriptions"
     ]:
         for technique_name in [
-            "SbertSemanticSearch",
+            # "SbertSemanticSearch",
             "GensimLsiSimilarity"
         ]:
             dataloader = _dataloaders[dataloader_name]
