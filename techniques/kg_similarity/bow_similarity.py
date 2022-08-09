@@ -1,8 +1,8 @@
 import re
 import json
-from typing import Dict, Sequence, Tuple, Any
+from typing import Dict, Sequence, Tuple
 from pathlib import Path
-import multiprocess as mp
+import concurrent.futures
 import numpy as np
 import numpy.typing as npt
 from sematch.semantic.similarity import WordNetSimilarity
@@ -40,7 +40,11 @@ class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
             json.dump(self.skip_words_file_content, f)
 
     def _compute_words_similarity_score(self, word_1: str, word_2: str) -> float:
-        return self.model.word_similarity(word_1, word_2)
+        try:
+            score = self.model.word_similarity(word_1, word_2)
+        except Exception:
+            score = 0.0
+        return score
 
     @staticmethod
     def _get_saved_similarity(
@@ -74,7 +78,7 @@ class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
         # convert words to list of words
         sentence1 = sentence1.split(" ")
         sentence2 = sentence2.split(" ")
-        all_words = [*sentence1, *sentence2]
+        all_words = {*sentence1, *sentence2}
         # check for words not present in ontology
         for word in all_words:
             if word not in self.skip_words:
@@ -109,12 +113,11 @@ class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
                 total_similarity += similarity_score
                 word_similarity_count += 1
         # normalize
-        total_similarity /= word_similarity_count
-        return total_similarity
-
-    # def _multiprocess_similarity_calculation(self, idx: int, sentence_1: str, sentence_2: str) -> Tuple[int, float]:
-    #     score = self._compute_sentence_similarity_score(sentence_1, sentence_2)
-    #     return idx, score
+        if word_similarity_count > 0:
+            total_similarity /= word_similarity_count
+            return total_similarity
+        else:
+            return 0.0
 
     def _compute_text_matrix_similarity(self, matrix) -> npt.NDArray:
         blank_sentences_indices = matrix[0] == ""
@@ -125,21 +128,17 @@ class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
         non_empty_str_indices = np.argwhere(matrix[0] != "").flatten().tolist()
         sentence_1_list = matrix[0][non_empty_str_indices].tolist()
         sentence_2_list = matrix[1][non_empty_str_indices].tolist()
-        # declare function
-        
-        def _multiprocess_similarity_calculation(idx: int, sentence_1: str, sentence_2: str) -> Tuple[int, float]:
-            print("Running function for ", idx, "S1: ", sentence_1, "S2: ", sentence_2)
+
+        def _multithread_similarity_calculation(idx: int, sentence_1: str, sentence_2: str) -> Tuple[int, float]:
             score = self._compute_sentence_similarity_score(sentence_1, sentence_2)
             return idx, score
-        # call function for each run case separately
-        results = None
-        with mp.Pool(mp.cpu_count()) as pool:
-            results = pool.map(
-                _multiprocess_similarity_calculation, zip(non_empty_str_indices, sentence_1_list, sentence_2_list)
+        # get results asynchronously
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            results = executor.map(
+                _multithread_similarity_calculation, non_empty_str_indices, sentence_1_list, sentence_2_list
             )
-        print(results)
-        # for index in non_empty_str_indices:
-        #     results_matrix[index] = s
+        for index, score in results:
+            results_matrix[index] = score
         return results_matrix
 
     def apply(
@@ -196,7 +195,7 @@ class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
             results_temp = reduced_similarities[idx]
             results[finding_id] = np.delete(results_temp, results_temp == -1).tolist()
         # update skip words file
-        self._update_skip_words_file()
+        # self._update_skip_words_file()
         # normalize clusters based on transitive property if required
         if transitive_clustering:
             results = self._transitive_clustering(results)

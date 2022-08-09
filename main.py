@@ -38,14 +38,14 @@ if __name__ == '__main__':
         #     unique_ds_path=str(multiple_static_tools_ds),
         #     target_ds_path=str(multiple_static_tools_ds)
         # ),
-        # *runcases.dynamic_tools_deduplication(
-        #     ds_path=str(dynamic_tools_ds),
-        #     save_runcase_file_path=str(dynamic_tools_results)
-        # ),
-        *runcases.static_tools_deduplication(
-            ds_path=str(multiple_static_tools_ds),
-            save_runcase_file_path=str(static_tools_results)
-        )
+        *runcases.dynamic_tools_deduplication(
+            ds_path=str(dynamic_tools_ds),
+            save_runcase_file_path=str(dynamic_tools_results)
+        ),
+        # *runcases.static_tools_deduplication(
+        #     ds_path=str(multiple_static_tools_ds),
+        #     save_runcase_file_path=str(static_tools_results)
+        # )
     ]
     # create a pool of process workers
     pool = mp.Pool(mp.cpu_count())

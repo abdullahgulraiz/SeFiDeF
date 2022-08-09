@@ -106,17 +106,28 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
     sbert_semantic_search = techniques.SbertSemanticSearch(embedder=techniques.SbertSemanticSearch.EMBEDDERS[0])
     _techniques_kwargs = {
         "SbertSemanticSearch": [
-            # {"threshold": 0.7},
+            {"threshold": 0.1},
+            {"threshold": 0.2},
+            {"threshold": 0.3},
+            {"threshold": 0.4},
+            {"threshold": 0.5},
+            {"threshold": 0.6},
+            {"threshold": 0.7},
             {"threshold": 0.8},
-            {"threshold": 0.85},
             {"threshold": 0.9},
             {"threshold": 0.95},  # max accuracy
         ],
         "GensimLsiSimilarity": [
-            # {"threshold": 0.8},
-            # {"threshold": 0.85},
+            {"threshold": 0.1},
+            {"threshold": 0.2},
+            {"threshold": 0.3},
+            {"threshold": 0.4},
+            {"threshold": 0.5},
+            {"threshold": 0.6},
+            {"threshold": 0.7},
+            {"threshold": 0.8},
             {"threshold": 0.9},  # maximum accuracy
-            # {"threshold": 0.95},
+            {"threshold": 0.95},
         ]
     }
 
@@ -127,7 +138,7 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
             return techniques.GensimLsiSimilarity(corpus=_corpus[_dataloader_name], num_topics=350)
 
     for dataloader_name in [
-        # "Descriptions",
+        "Descriptions",
         "Aggregated Descriptions"
     ]:
         for technique_name in [
