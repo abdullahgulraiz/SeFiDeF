@@ -80,6 +80,15 @@ class RunCase:
                     pprint({field: evaluation[field] for field in print_evaluation_fields}, compact=True)
                 else:
                     pprint(evaluation, compact=True)
+                # print for excel
+                print(
+                    evaluation["accuracy"]["predictions"], "\t",
+                    evaluation["accuracy"]["labels"], "\t",
+                    evaluation["accuracy"]["average"], "\t",
+                    evaluation["f-measure"], "\t",
+                    evaluation["precision"], "\t",
+                    evaluation["recall"]
+                )
             # store runcases data
             runcases_data["runcases"].append({
                 "title": runcase_title,

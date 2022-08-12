@@ -104,6 +104,7 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
     }
     # techniques
     sbert_semantic_search = techniques.SbertSemanticSearch(embedder=techniques.SbertSemanticSearch.EMBEDDERS[0])
+    kg_similarity = techniques.KnowledgeGraphBagOfWordsSimilarity()
     _techniques_kwargs = {
         "SbertSemanticSearch": [
             {"threshold": 0.1},
@@ -128,6 +129,18 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
             {"threshold": 0.8},
             {"threshold": 0.9},  # maximum accuracy
             {"threshold": 0.95},
+        ],
+        "KgSimilarity": [
+            {"threshold": 0.1},
+            {"threshold": 0.2},
+            {"threshold": 0.3},
+            {"threshold": 0.4},
+            {"threshold": 0.5},
+            {"threshold": 0.6},
+            {"threshold": 0.7},
+            {"threshold": 0.8},
+            {"threshold": 0.9},
+            {"threshold": 0.95},
         ]
     }
 
@@ -136,14 +149,17 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
             return sbert_semantic_search
         elif _technique_name == "GensimLsiSimilarity":
             return techniques.GensimLsiSimilarity(corpus=_corpus[_dataloader_name], num_topics=350)
+        elif _technique_name == "KgSimilarity":
+            return kg_similarity
 
     for dataloader_name in [
         "Descriptions",
-        "Aggregated Descriptions"
+        # "Aggregated Descriptions"
     ]:
         for technique_name in [
             # "SbertSemanticSearch",
-            "GensimLsiSimilarity"
+            # "GensimLsiSimilarity",
+            "KgSimilarity"
         ]:
             dataloader = _dataloaders[dataloader_name]
             yield RunCase(

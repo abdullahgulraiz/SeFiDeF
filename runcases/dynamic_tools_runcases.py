@@ -14,10 +14,31 @@ def dynamic_tools_deduplication(ds_path: str, save_runcase_file_path: str = None
         remove_special_characters=False
     )
     for corpus_format in [
-        corpus_formats.zap_arachni_name_description_solution,  # this is generally enough
+        # corpus_formats.zap_arachni_name_description_solution,  # this is generally enough
         # corpus_formats.zap_arachni_description_solution,
         corpus_formats.zap_arachni_description
     ]:
+        # Knowledge graph-based
+        yield RunCase(
+            title=f"Knowledge-graph deduplication",
+            dataloader=dataloader,
+            corpus_format=corpus_format,
+            technique=techniques.KnowledgeGraphBagOfWordsSimilarity(),
+            technique_kwargs=[
+                {"threshold": 0.1, "transitive_clustering": True},
+                {"threshold": 0.2, "transitive_clustering": True},
+                {"threshold": 0.3, "transitive_clustering": True},
+                {"threshold": 0.4, "transitive_clustering": True},
+                {"threshold": 0.5, "transitive_clustering": True},
+                {"threshold": 0.6, "transitive_clustering": True},
+                {"threshold": 0.7, "transitive_clustering": True},
+                {"threshold": 0.8, "transitive_clustering": True},
+                {"threshold": 0.9, "transitive_clustering": True},
+                {"threshold": 0.95, "transitive_clustering": True},
+            ],
+            # save_runcase_file_path=save_runcase_file_path
+        )
+
         # # S-BERT - Transformer based
         # for embedder in techniques.SbertSemanticSearch.EMBEDDERS[0:1]:
         #     yield RunCase(
@@ -66,24 +87,3 @@ def dynamic_tools_deduplication(ds_path: str, save_runcase_file_path: str = None
         #         ],
         #         save_runcase_file_path=save_runcase_file_path
         #     )
-
-        # KG-based
-        yield RunCase(
-            title=f"KG BOW Similarity",
-            dataloader=dataloader,
-            corpus_format=corpus_format,
-            technique=techniques.KnowledgeGraphBagOfWordsSimilarity(),
-            technique_kwargs=[
-                {"threshold": 0.1},
-                {"threshold": 0.2},
-                # {"threshold": 0.3},
-                # {"threshold": 0.4},
-                # {"threshold": 0.5},
-                # {"threshold": 0.6},
-                # {"threshold": 0.7},
-                # {"threshold": 0.8},
-                # {"threshold": 0.9},
-                # {"threshold": 0.95},
-            ],
-            # save_runcase_file_path=save_runcase_file_path
-        )
