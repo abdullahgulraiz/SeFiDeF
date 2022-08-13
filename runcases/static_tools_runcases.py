@@ -104,7 +104,7 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
     }
     # techniques
     sbert_semantic_search = techniques.SbertSemanticSearch(embedder=techniques.SbertSemanticSearch.EMBEDDERS[0])
-    kg_similarity = techniques.KnowledgeGraphBagOfWordsSimilarity()
+    kg_similarity = techniques.KnowledgeGraphBagOfWordsSimilarityV2()
     _techniques_kwargs = {
         "SbertSemanticSearch": [
             {"threshold": 0.1},
@@ -153,8 +153,8 @@ def static_tools_deduplication(ds_path: str, save_runcase_file_path: str = None)
             return kg_similarity
 
     for dataloader_name in [
-        "Descriptions",
-        # "Aggregated Descriptions"
+        # "Descriptions",
+        "Aggregated Descriptions"
     ]:
         for technique_name in [
             # "SbertSemanticSearch",

@@ -14,16 +14,16 @@ def dynamic_tools_deduplication(ds_path: str, save_runcase_file_path: str = None
         remove_special_characters=False
     )
     for corpus_format in [
-        # corpus_formats.zap_arachni_name_description_solution,  # this is generally enough
+        corpus_formats.zap_arachni_name_description_solution,  # this is generally enough
         # corpus_formats.zap_arachni_description_solution,
-        corpus_formats.zap_arachni_description
+        # corpus_formats.zap_arachni_description
     ]:
         # Knowledge graph-based
         yield RunCase(
             title=f"Knowledge-graph deduplication",
             dataloader=dataloader,
             corpus_format=corpus_format,
-            technique=techniques.KnowledgeGraphBagOfWordsSimilarity(),
+            technique=techniques.KnowledgeGraphBagOfWordsSimilarityV2(),
             technique_kwargs=[
                 {"threshold": 0.1, "transitive_clustering": True},
                 {"threshold": 0.2, "transitive_clustering": True},

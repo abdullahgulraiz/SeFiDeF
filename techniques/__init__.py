@@ -2,4 +2,4 @@ from .base import BaseTechnique
 from .gensim_lsi_similarity import GensimLsiSimilarity
 from .sbert_semantic_search import SbertSemanticSearch
 from .equality_comparison import EqualityComparison
-from .kg_similarity.bow_similarity import KnowledgeGraphBagOfWordsSimilarity
+from .kg_similarity.bow_similarity import KnowledgeGraphBagOfWordsSimilarityV1, KnowledgeGraphBagOfWordsSimilarityV2

@@ -2,6 +2,7 @@ import re
 import json
 from typing import Dict, Sequence, Tuple
 from pathlib import Path
+from collections import defaultdict
 import numpy as np
 import numpy.typing as npt
 from nltk.corpus import wordnet as wn
@@ -11,7 +12,7 @@ import utils
 from techniques import BaseTechnique
 
 
-class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
+class KnowledgeGraphBagOfWordsSimilarityV1(BaseTechnique):
     def __init__(self):
         # initialize model
         self.ontology = "NLTK WordNet"
@@ -293,6 +294,48 @@ class KnowledgeGraphBagOfWordsSimilarity(BaseTechnique):
         for idx, finding_id in enumerate(finding_ids):
             results_temp = reduced_similarities[idx]
             results[finding_id] = np.delete(results_temp, results_temp == -1).tolist()
+        # update skip words file
+        self._update_skip_words_file()
+        # normalize clusters based on transitive property if required
+        if transitive_clustering:
+            results = self._transitive_clustering(results)
+        return dict(results)
+
+
+class KnowledgeGraphBagOfWordsSimilarityV2(KnowledgeGraphBagOfWordsSimilarityV1):
+    # override
+    def apply(
+        self,
+        corpus: Dict[int, str],
+        threshold: float = 0.25,
+        transitive_clustering: bool = True,
+    ) -> Dict[int, Sequence[int]]:
+        results = defaultdict(list)
+        for finding_id_main, finding_text_main in corpus.items():
+            # finding is similar to itself
+            results[finding_id_main].append(finding_id_main)
+            # get all other similar findings
+            for finding_id_sec, finding_text_sec in corpus.items():
+                if finding_text_main != finding_text_sec:
+                    saved_similarity_available, similarity_score = self._get_saved_similarity(
+                        string_1=finding_text_main,
+                        string_2=finding_text_sec,
+                        saved_collection=self.saved_sentence_similarities
+                    )
+                    if not saved_similarity_available:
+                        similarity_score = self._compute_sentence_similarity_score(finding_text_main, finding_text_sec)
+                        self._save_string_similarity(
+                            string_1=finding_text_main,
+                            string_2=finding_text_sec,
+                            similarity=similarity_score,
+                            saved_collection=self.saved_sentence_similarities
+                        )
+                else:
+                    similarity_score = 1.0
+                if similarity_score >= threshold:
+                    if finding_id_sec not in results[finding_id_main]:
+                        results[finding_id_main].append(finding_id_sec)
+            results[finding_id_main].sort()
         # update skip words file
         self._update_skip_words_file()
         # normalize clusters based on transitive property if required
