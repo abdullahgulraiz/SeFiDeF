@@ -7,7 +7,9 @@ from techniques.base import BaseTechnique
 
 
 class GensimLsiSimilarity(BaseTechnique):
-    def __init__(self, corpus: Dict[int, str], tf_idf: bool = True, num_topics: int = 300):
+    def __init__(
+        self, corpus: Dict[int, str], tf_idf: bool = True, num_topics: int = 300
+    ):
         self.param_corpus = corpus
         self.training_corpus = list(corpus.values())
         # remove common words and tokenize
@@ -17,13 +19,7 @@ class GensimLsiSimilarity(BaseTechnique):
         for text in texts:
             for token in text:
                 frequency[token] += 1
-        texts = [
-            [
-                token for token in text
-                if frequency[token] > 1
-            ]
-            for text in texts
-        ]
+        texts = [[token for token in text if frequency[token] > 1] for text in texts]
         self.dictionary = corpora.Dictionary(texts)
         corpus = [self.dictionary.doc2bow(text) for text in texts]
         self.tf_idf = None
@@ -31,15 +27,17 @@ class GensimLsiSimilarity(BaseTechnique):
             tfidf = models.TfidfModel(corpus)
             corpus = [tfidf[text] for text in corpus]
             self.tf_idf = tfidf
-        self.gensim_model = models.LsiModel(corpus, id2word=self.dictionary, num_topics=num_topics)
+        self.gensim_model = models.LsiModel(
+            corpus, id2word=self.dictionary, num_topics=num_topics
+        )
         # transform corpus to LSI space and index it
         self.corpus_index = similarities.MatrixSimilarity(self.gensim_model[corpus])
 
     def apply(
-            self,
-            corpus: Dict[int, str],
-            threshold: float = 0.5,
-            transitive_clustering: bool = True
+        self,
+        corpus: Dict[int, str],
+        threshold: float = 0.5,
+        transitive_clustering: bool = True,
     ) -> Dict[int, Sequence[int]]:
         # create string -> Id mapping
         string_id_mapping = defaultdict(list)

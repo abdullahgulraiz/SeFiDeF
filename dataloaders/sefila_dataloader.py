@@ -8,14 +8,14 @@ from dataloaders.base import BaseDataLoader
 
 class SefilaDataLoaderV1(BaseDataLoader):
     def __init__(
-            self,
-            path: str,
-            remove_stopwords: bool = True,
-            remove_linebreaks: bool = True,
-            remove_special_characters: bool = True,
-            to_lowercase: bool = True
+        self,
+        path: str,
+        remove_stopwords: bool = True,
+        remove_linebreaks: bool = True,
+        remove_special_characters: bool = True,
+        to_lowercase: bool = True,
     ) -> None:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             self.data = json.load(f)
         self.remove_stopwords = remove_stopwords
         self.remove_linebreaks = remove_linebreaks
@@ -27,14 +27,18 @@ class SefilaDataLoaderV1(BaseDataLoader):
 
     @staticmethod
     def _get_tool_for_finding(finding):
-        return finding['tool']
+        return finding["tool"]
 
-    def get_corpus(self, keys: Sequence[Dict[str, Union[str, Tuple[str], bool]]], separator=' - ') -> Tuple[
+    def get_corpus(
+        self, keys: Sequence[Dict[str, Union[str, Tuple[str], bool]]], separator=" - "
+    ) -> Tuple[
         Dict[int, str],  # format: {finding_id : "finding_text"}
         Dict[
-            Tuple[int, str],  # format: {(collection_id, "collection_title") : [finding_ids]}
-            Sequence[int]
-        ]
+            Tuple[
+                int, str
+            ],  # format: {(collection_id, "collection_title") : [finding_ids]}
+            Sequence[int],
+        ],
     ]:
         # create a mapping of tools -> fields to get fields for a tool conveniently and tools -> field requirement
         fields_per_tool = dict()
@@ -43,12 +47,12 @@ class SefilaDataLoaderV1(BaseDataLoader):
         all_fields_required_per_tool = defaultdict(bool)
         # create a mapping of field
         for key in keys:
-            tool_name = key['tool']
-            fields_per_tool[tool_name] = key['fields']
-            if 'ensure_fields' in key.keys():
-                all_fields_required_per_tool[tool_name] = key['ensure_fields']
-            if 'processing_functions' in key.keys():
-                processing_functions_per_tool[tool_name] = key['processing_functions']
+            tool_name = key["tool"]
+            fields_per_tool[tool_name] = key["fields"]
+            if "ensure_fields" in key.keys():
+                all_fields_required_per_tool[tool_name] = key["ensure_fields"]
+            if "processing_functions" in key.keys():
+                processing_functions_per_tool[tool_name] = key["processing_functions"]
         # create empty corpus dict to store finding ID -> corpus body
         corpus = defaultdict(str)
         # create empty labels dict to store collection ID -> sequence of finding IDs
@@ -56,18 +60,20 @@ class SefilaDataLoaderV1(BaseDataLoader):
         # start generating corpus
         for tool, fields in fields_per_tool.items():
             for collection in self._get_collections():
-                for finding in collection['findings']:
+                for finding in collection["findings"]:
                     # skip the finding if it doesn't belong to our tool of interest
                     if tool != self._get_tool_for_finding(finding):
                         continue
-                    finding_body = finding['finding']
+                    finding_body = finding["finding"]
                     # generate single corpus entry from given tool fields
                     corpus_entry = []
                     for field in fields:
                         if field not in finding_body.keys():
                             if not all_fields_required_per_tool[tool]:
                                 continue
-                            raise KeyError(f"Cannot find field `{field}` for finding ID `{finding['id']}`")
+                            raise KeyError(
+                                f"Cannot find field `{field}` for finding ID `{finding['id']}`"
+                            )
                         # get field value
                         field_value = finding_body[field]
                         # process field value through provided function if applicable
@@ -79,11 +85,13 @@ class SefilaDataLoaderV1(BaseDataLoader):
                     # join corpus entry with seperator
                     corpus_entry = separator.join(corpus_entry)
                     # store corpus entry against finding ID as label
-                    finding_id = int(finding['id'])
-                    collection_identifier = (int(collection['id']), collection['name'])
+                    finding_id = int(finding["id"])
+                    collection_identifier = (int(collection["id"]), collection["name"])
                     # remove line breaks, tabs, and spaces and trim whitespaces
                     if self.remove_linebreaks:
-                        corpus_entry = re.sub("[ \\t\\n\\r]+", " ", corpus_entry).strip()
+                        corpus_entry = re.sub(
+                            "[ \\t\\n\\r]+", " ", corpus_entry
+                        ).strip()
                     # remove special characters
                     if self.remove_special_characters:
                         corpus_entry = re.sub("/[\\s()-]+/gi", "", corpus_entry)
@@ -98,14 +106,20 @@ class SefilaDataLoaderV1(BaseDataLoader):
 
 class SefilaDataLoaderV2(SefilaDataLoaderV1):
     def __init__(
-            self,
-            path: str,
-            remove_stopwords: bool = True,
-            remove_linebreaks: bool = True,
-            remove_special_characters: bool = True,
-            to_lowercase: bool = True
+        self,
+        path: str,
+        remove_stopwords: bool = True,
+        remove_linebreaks: bool = True,
+        remove_special_characters: bool = True,
+        to_lowercase: bool = True,
     ) -> None:
-        super().__init__(path, remove_stopwords, remove_linebreaks, remove_special_characters, to_lowercase)
+        super().__init__(
+            path,
+            remove_stopwords,
+            remove_linebreaks,
+            remove_special_characters,
+            to_lowercase,
+        )
         # create finding id -> tool name mapping for efficient retrieval later
         self.finding_id_tool_name_mapping = {}
         for metadata in self.data["metadata"]:
@@ -117,6 +131,4 @@ class SefilaDataLoaderV2(SefilaDataLoaderV1):
         return self.data["collections"]
 
     def _get_tool_for_finding(self, finding):
-        return self.finding_id_tool_name_mapping[
-            int(finding["id"])
-        ]
+        return self.finding_id_tool_name_mapping[int(finding["id"])]

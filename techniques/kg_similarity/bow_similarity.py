@@ -68,9 +68,9 @@ class KnowledgeGraphBagOfWordsSimilarityV1(BaseTechnique):
         synsets_filtered_word1 = filter_lowest_sense_synsets(synsets_word1)
         synsets_filtered_word2 = filter_lowest_sense_synsets(synsets_word2)
 
-        assert len(synsets_filtered_word1) > 0 and len(synsets_filtered_word2) > 0, (
-            "There should be at least one synset for each word"
-        )
+        assert (
+            len(synsets_filtered_word1) > 0 and len(synsets_filtered_word2) > 0
+        ), "There should be at least one synset for each word"
 
         # function to get preferred synset
         def _get_preferred_pos_synset(all_synsets):
@@ -184,9 +184,9 @@ class KnowledgeGraphBagOfWordsSimilarityV1(BaseTechnique):
 
     def _compute_text_matrix_similarity(self, matrix) -> npt.NDArray:
         blank_sentences_indices = matrix[0] == ""
-        assert np.all(blank_sentences_indices == (matrix[1] == "")), (
-            "Sentences for comparison should either both be blank or available."
-        )
+        assert np.all(
+            blank_sentences_indices == (matrix[1] == "")
+        ), "Sentences for comparison should either both be blank or available."
         results_matrix = np.full(matrix.shape[1:], -1, dtype=float)
         # create arrays of indices, first sentences, and second sentences
         non_empty_str_indices = np.argwhere(matrix[0] != "").flatten().tolist()
@@ -277,7 +277,8 @@ class KnowledgeGraphBagOfWordsSimilarityV1(BaseTechnique):
         similarities = similarities.reshape((num_entries, num_entries))
         # ensure spatial integrity of returned data
         assert np.all(
-            (positions_to_compute_similarity[0] | positions_to_compute_similarity[1]) == (similarities >= 0)
+            (positions_to_compute_similarity[0] | positions_to_compute_similarity[1])
+            == (similarities >= 0)
         ), "Similarity scores values should correspond to positions where similarities should be computed."
         # reflect similarity values along the diagonal
         similarities = np.triu(similarities)
@@ -317,18 +318,23 @@ class KnowledgeGraphBagOfWordsSimilarityV2(KnowledgeGraphBagOfWordsSimilarityV1)
             # get all other similar findings
             for finding_id_sec, finding_text_sec in corpus.items():
                 if finding_text_main != finding_text_sec:
-                    saved_similarity_available, similarity_score = self._get_saved_similarity(
+                    (
+                        saved_similarity_available,
+                        similarity_score,
+                    ) = self._get_saved_similarity(
                         string_1=finding_text_main,
                         string_2=finding_text_sec,
-                        saved_collection=self.saved_sentence_similarities
+                        saved_collection=self.saved_sentence_similarities,
                     )
                     if not saved_similarity_available:
-                        similarity_score = self._compute_sentence_similarity_score(finding_text_main, finding_text_sec)
+                        similarity_score = self._compute_sentence_similarity_score(
+                            finding_text_main, finding_text_sec
+                        )
                         self._save_string_similarity(
                             string_1=finding_text_main,
                             string_2=finding_text_sec,
                             similarity=similarity_score,
-                            saved_collection=self.saved_sentence_similarities
+                            saved_collection=self.saved_sentence_similarities,
                         )
                 else:
                     similarity_score = 1.0

@@ -6,12 +6,14 @@ from typing import Sequence
 from .base import RunCase
 
 
-def dynamic_tools_deduplication(ds_path: str, save_runcase_file_path: str = None) -> Sequence[RunCase]:
+def dynamic_tools_deduplication(
+    ds_path: str, save_runcase_file_path: str = None
+) -> Sequence[RunCase]:
     dataloader = dataloaders.SefilaDataLoaderV2(
         path=ds_path,
         remove_stopwords=False,
         remove_linebreaks=True,
-        remove_special_characters=False
+        remove_special_characters=False,
     )
     for corpus_format in [
         corpus_formats.zap_arachni_name_description_solution,  # this is generally enough

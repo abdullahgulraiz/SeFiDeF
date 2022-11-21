@@ -130,3 +130,9 @@ dmypy.json
 
 # PyCharm
 .idea/
+
+# results folder
+results/
+
+# MAC OS finder
+.DS_Store
