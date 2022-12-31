@@ -1,6 +1,6 @@
 # {Se}curity {Fi}ndings {De}duplication {F}ramework
 
-This repository contains code written to achieve the goals of my Master Thesis. It uses NLP semantic similarity techniques to identify duplicates in DevOps security findings reports, and compares the results with ground truth data. This would enable identification of the most suitable technique for security findings deduplication. The terminologies "identification of duplicates" and "deduplication" are used interchangeably in code and documentation, since latter is the goal of former.
+This repository contains code written to achieve the goals of my Master Thesis. It uses NLP semantic similarity techniques to identify duplicates in DevOps security tool reports, and compares the results with ground truth data. This enabled identification of the most suitable technique for security findings deduplication. The terminologies "identification of duplicates" and "deduplication" are used interchangeably in code and documentation, since latter is the goal of former.
 
 The code contains the following subpackages:
 - `runcases`: contain runnable deduplication experiments e.g., deduplicating reports from all static tools
